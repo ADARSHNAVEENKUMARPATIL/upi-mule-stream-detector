@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { 
   ShieldAlert, 
@@ -7,20 +7,14 @@ import {
   AlertTriangle, 
   Search, 
   ArrowRight, 
-  TrendingDown, 
-  CheckCircle, 
+  TrendingUp, 
   X, 
   Clock, 
   Layers, 
   ChevronRight, 
-  Play, 
-  Flame, 
   Film, 
-  Tv, 
-  Sparkles, 
-  Eye, 
   ShieldCheck, 
-  Radio 
+  Flame 
 } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -36,6 +30,11 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
+  // Dynamic Live Counter & Volume Tracking State
+  const [totalTxnCount, setTotalTxnCount] = useState(0);
+  const [totalVolume, setTotalVolume] = useState(0);
+  const seenTxnIdsRef = useRef(new Set());
+
   // Hop Chain Modal State
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [hopChainData, setHopChainData] = useState(null);
@@ -49,21 +48,46 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 2. High-Frequency Poller: Pulls live raw transactions and fraud alerts concurrently every 1000ms
+  // 2. High-Frequency Poller: Pulls live raw transactions, fraud alerts, and stream stats concurrently every 1000ms
   useEffect(() => {
     const fetchLiveData = async () => {
       try {
-        const [txRes, alertRes] = await Promise.all([
+        const [txRes, alertRes, statsRes] = await Promise.all([
           axios.get(`${API_BASE_URL}/transactions?limit=50`, { timeout: 2000 }).catch(() => ({ data: [] })),
-          axios.get(`${API_BASE_URL}/alerts?limit=50`, { timeout: 2000 })
+          axios.get(`${API_BASE_URL}/alerts?limit=50`, { timeout: 2000 }).catch(() => ({ data: [] })),
+          axios.get(`${API_BASE_URL}/stats`, { timeout: 2000 }).catch(() => ({ data: null }))
         ]);
 
         if (Array.isArray(txRes.data)) {
           setTransactions(txRes.data);
+
+          // Track newly seen transactions across polls to guarantee dynamic incrementing
+          let incrementalCount = 0;
+          let incrementalVolume = 0;
+
+          txRes.data.forEach((tx) => {
+            if (tx.transaction_id && !seenTxnIdsRef.current.has(tx.transaction_id)) {
+              seenTxnIdsRef.current.add(tx.transaction_id);
+              incrementalCount += 1;
+              incrementalVolume += (tx.amount || 0);
+            }
+          });
+
+          // If backend returns real-time ClickHouse OLAP total, synchronize with DB count
+          if (statsRes?.data?.total_count && statsRes.data.total_count > 0) {
+            setTotalTxnCount(Math.max(statsRes.data.total_count, seenTxnIdsRef.current.size));
+            setTotalVolume(statsRes.data.total_volume || 0);
+          } else {
+            // Otherwise continuously accumulate client-side dynamically
+            setTotalTxnCount(prev => prev + incrementalCount);
+            setTotalVolume(prev => prev + incrementalVolume);
+          }
         }
+
         if (Array.isArray(alertRes.data)) {
           setAlerts(alertRes.data);
         }
+
         setApiError(null);
         setLastSyncTime(new Date());
       } catch (err) {
@@ -122,7 +146,6 @@ export default function App() {
   );
 
   const uniqueMuleAccounts = new Set(alerts.map(a => a.account_id)).size;
-  const totalFlaggedVolume = alerts.reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   const formatCurrency = (amt) => {
     return new Intl.NumberFormat('en-IN', {
@@ -143,7 +166,7 @@ export default function App() {
   };
 
   // ==============================================================
-  // INITIAL FULL-SCREEN CINEMATIC STREAMING INTRO (2 SECONDS)
+  // INITIAL FULL-SCREEN CINEMATIC INTRO (2 SECONDS) - "AegisStream"
   // ==============================================================
   if (initialLoading) {
     return (
@@ -155,12 +178,12 @@ export default function App() {
         {/* Cinematic Logo & Spotlight Container */}
         <div className="relative z-10 flex flex-col items-center space-y-6 text-center px-4">
           
-          {/* Glowing Red Brand Mark */}
+          {/* Glowing Red Brand Mark with "A" */}
           <div className="relative flex items-center justify-center">
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#E50914] to-black p-0.5 shadow-[0_0_50px_rgba(229,9,20,0.8)] animate-pulse">
               <div className="w-full h-full bg-[#111111] rounded-2xl flex items-center justify-center">
                 <span className="text-4xl font-black tracking-tighter text-[#E50914] cinema-text-glow font-sans">
-                  M
+                  A
                 </span>
               </div>
             </div>
@@ -170,10 +193,10 @@ export default function App() {
 
           <div className="space-y-2">
             <h1 className="text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-white cinema-text-glow font-sans">
-              MULE <span className="text-[#E50914]">STREAM</span> SURVEILLANCE
+              AEGIS<span className="text-[#E50914]">STREAM</span>
             </h1>
             <p className="text-xs sm:text-sm text-gray-400 font-mono tracking-wider">
-              INTERACTIVE STORYTELLING &bull; REAL-TIME UPI FRAUD ENGINE &bull; 2026+
+              REAL-TIME UPI &amp; MULE ACCOUNT STREAM DETECTOR
             </p>
           </div>
 
@@ -187,7 +210,7 @@ export default function App() {
           </div>
 
           <div className="text-[11px] font-mono text-gray-500 uppercase tracking-widest pt-2">
-            INITIALIZING KAFKA STREAM &bull; APACHE FLINK 1.18 &bull; CLICKHOUSE OLAP
+            CONNECTING REAL-TIME TRANSACTION ENGINE...
           </div>
         </div>
       </div>
@@ -195,12 +218,12 @@ export default function App() {
   }
 
   // ==============================================================
-  // MAIN CINEMATIC STREAMING DASHBOARD (NETFLIX / APPLE TV STYLE)
+  // MAIN DASHBOARD - "AegisStream"
   // ==============================================================
   return (
     <div className="min-h-screen bg-black text-white cinema-backdrop flex flex-col font-sans selection:bg-[#E50914] selection:text-white">
       
-      {/* Top Navigation Bar: Clean Streaming Chrome */}
+      {/* Top Navigation Bar */}
       <header className="sticky top-0 z-40 bg-black/85 backdrop-blur-xl border-b border-white/10 px-6 py-4 shadow-2xl transition-all">
         <div className="max-w-[1750px] mx-auto flex items-center justify-between gap-4">
           
@@ -208,21 +231,18 @@ export default function App() {
           <div className="flex items-center space-x-4">
             <div className="flex items-center gap-2.5 cursor-pointer">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-[#E50914] to-red-600 flex items-center justify-center shadow-[0_0_15px_rgba(229,9,20,0.7)]">
-                <span className="text-xl font-black text-white tracking-tighter">M</span>
+                <span className="text-xl font-black text-white tracking-tighter">A</span>
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-lg font-black tracking-tight uppercase text-white cinema-text-glow">
-                    MULE<span className="text-[#E50914]">FLIX</span> // SENTINEL
+                    AEGIS<span className="text-[#E50914]">STREAM</span>
                   </h1>
                   <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-[#E50914]/20 text-[#E50914] border border-[#E50914]/40 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#E50914] animate-ping"></span>
                     LIVE STREAM
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-400 font-mono hidden sm:block">
-                  Sub-15s pass-through detection powered by Apache Flink 1.18 & ClickHouse
-                </p>
               </div>
             </div>
           </div>
@@ -258,10 +278,10 @@ export default function App() {
           </div>
         )}
 
-        {/* 4 Cinematic KPI Highlight Cards (Movie Billboard Style) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 3 Stream KPI Telemetry Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
-          {/* Card 1: Live Transactions Buffer */}
+          {/* Card 1: Dynamic Live Stream Activity Counter */}
           <div className="cinema-glass rounded-xl p-4 relative overflow-hidden group hover:border-[#E50914]/50 transition-all duration-300 shadow-cinema-card">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#E50914] to-transparent opacity-60"></div>
             <div className="flex items-center justify-between">
@@ -271,9 +291,8 @@ export default function App() {
               </div>
             </div>
             <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">
-              {transactions.length > 0 ? `${transactions.length} txns` : 'Streaming...'}
+              {totalTxnCount > 0 ? `${totalTxnCount.toLocaleString()} txns` : 'Streaming...'}
             </div>
-            <div className="mt-1 text-xs text-gray-400">Ingested into raw_transactions</div>
           </div>
 
           {/* Card 2: Flagged Mule Accounts */}
@@ -288,40 +307,25 @@ export default function App() {
             <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-[#E50914] font-mono tracking-tight cinema-text-glow">
               {uniqueMuleAccounts}
             </div>
-            <div className="mt-1 text-xs text-red-300/80">Compromised 10-digit VPAs</div>
           </div>
 
-          {/* Card 3: Flagged Laundering Volume */}
+          {/* Card 3: Live Real-Time Transaction Volume */}
           <div className="cinema-glass rounded-xl p-4 relative overflow-hidden group hover:border-amber-500/50 transition-all duration-300 shadow-cinema-card">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Laundered Volume</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Transaction Volume</span>
               <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
-                <TrendingDown className="w-4 h-4" />
+                <TrendingUp className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-amber-300 font-mono tracking-tight cinema-gold-glow">
-              {formatCurrency(totalFlaggedVolume)}
+              {formatCurrency(totalVolume)}
             </div>
-            <div className="mt-1 text-xs text-gray-400">Pass-through money volume</div>
           </div>
 
-          {/* Card 4: Sub-15s Rule */}
-          <div className="cinema-glass rounded-xl p-4 relative overflow-hidden group hover:border-purple-500/50 transition-all duration-300 shadow-cinema-card">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Velocity Cutoff</span>
-              <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
-                <CheckCircle className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-purple-300 font-mono tracking-tight">
-              &le; 15.0s
-            </div>
-            <div className="mt-1 text-xs text-gray-400">Inflow &rarr; outflow detection gate</div>
-          </div>
         </div>
 
         {/* ======================================================== */}
-        {/* CINEMATIC SPLIT SCREEN (70% LEFT FEED | 30% RIGHT ALERTS)*/}
+        {/* SPLIT SCREEN (70% LEFT FEED | 30% RIGHT ALERTS)          */}
         {/* ======================================================== */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
           
@@ -346,7 +350,7 @@ export default function App() {
 
             {/* Sub-header info bar */}
             <div className="px-5 py-2.5 bg-[#0d0d0d] border-b border-white/5 text-[11px] font-mono text-gray-400 flex items-center justify-between">
-              <span>STREAM SOURCE: DEFAULT.RAW_TRANSACTIONS</span>
+              <span>STREAM SOURCE: LIVE KAFKA FEED</span>
               <span>CONTINUOUS AUDIT LOG</span>
             </div>
 
@@ -511,19 +515,19 @@ export default function App() {
       {/* ======================================================== */}
       {selectedAlert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
-          <div className="cinema-glass-elevated rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-[0_0_60px_rgba(229,9,20,0.4)]">
+          <div className="cinema-glass-elevated rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh] shadow-[0_0_60px_rgba(229,9,20,0.4)]">
             
             {/* Modal Header */}
-            <div className="p-5 border-b border-white/10 bg-gradient-to-r from-red-950/60 via-[#181818] to-black flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-white/10 bg-gradient-to-r from-red-950/60 via-[#181818] to-black flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-[#E50914]/20 border border-[#E50914]/40 text-[#E50914]">
                   <Layers className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold uppercase text-white cinema-text-glow flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-extrabold uppercase text-white cinema-text-glow flex items-center gap-2">
                     Laundering Hop-Chain Inspection
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#E50914] text-white">
-                      FLAGGED
+                      {hopChainData?.hops ? `${hopChainData.hops.length} HOPS` : 'FLAGGED'}
                     </span>
                   </h3>
                   <p className="text-xs font-mono text-gray-400 mt-0.5">
@@ -534,47 +538,52 @@ export default function App() {
 
               <button 
                 onClick={closeModal}
-                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white transition-colors"
+                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white transition-colors cursor-pointer"
                 title="Close Modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Body: Sequential Hop Breakdown */}
-            <div className="p-6 overflow-y-auto space-y-4">
+            {/* Modal Body: Scrollable Hop Container with max-h-[60vh] and visible scrollbar */}
+            <div className="p-4 sm:p-5 max-h-[60vh] overflow-y-auto space-y-3 pr-2 select-text">
               {loadingHopChain ? (
-                <div className="py-20 flex flex-col items-center justify-center space-y-3">
-                  <RefreshCw className="w-8 h-8 animate-spin text-[#E50914]" />
+                <div className="py-16 flex flex-col items-center justify-center space-y-3">
+                  <RefreshCw className="w-7 h-7 animate-spin text-[#E50914]" />
                   <p className="text-xs font-mono text-gray-400 uppercase">RECONSTRUCTING SEQUENTIAL HOPS FROM CLICKHOUSE...</p>
                 </div>
               ) : hopChainData && hopChainData.hops && hopChainData.hops.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="text-xs font-mono text-gray-400 uppercase border-b border-white/10 pb-2">
-                    RECONSTRUCTED {hopChainData.hops.length} SEQUENTIAL HOPS CROSSING THIS MULE ACCOUNT:
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs font-mono text-gray-400 uppercase border-b border-white/10 pb-2">
+                    <span>CHAIN SEQUENCE: {hopChainData.hops.length} HOPS DETECTED</span>
+                    <span className="text-amber-400 font-bold">TOTAL: {formatCurrency(hopChainData.hops.reduce((s, h) => s + (h.amount || 0), 0))}</span>
                   </div>
 
                   {hopChainData.hops.map((hop, idx) => (
                     <div key={hop.transaction_id || idx} className="relative">
-                      {/* Vertical connecting gradient indicator */}
-                      {idx < hopChainData.hops.length - 1 && (
-                        <div className="my-2 flex justify-center text-[11px] font-mono font-bold text-[#E50914]">
-                          &darr; [PASS-THROUGH VELOCITY: &le; 3.0 SECONDS] &darr;
+                      {/* Compact Directed Velocity Indicator between hops */}
+                      {idx > 0 && (
+                        <div className="my-1.5 flex items-center justify-center gap-2 text-[10px] font-mono font-bold text-[#E50914]">
+                          <span className="h-px w-12 bg-[#E50914]/30"></span>
+                          <span>&darr; [PASS-THROUGH VELOCITY: &le; 3.0s] &darr;</span>
+                          <span className="h-px w-12 bg-[#E50914]/30"></span>
                         </div>
                       )}
 
-                      <div className="cinema-glass rounded-xl p-4 border border-white/10 hover:border-[#E50914]/50 transition-all space-y-2">
-                        <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs">
-                          <span className="font-mono font-bold px-2 py-0.5 rounded bg-[#E50914]/20 text-[#E50914] border border-[#E50914]/30">
-                            SCENE // HOP 0{hop.hop_index || idx + 1}
+                      {/* Compact Hop Card */}
+                      <div className="cinema-glass rounded-xl p-3 border border-white/10 hover:border-[#E50914]/60 transition-all space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-mono font-bold px-2 py-0.5 rounded bg-[#E50914]/20 text-[#E50914] border border-[#E50914]/40 text-[10px]">
+                            HOP 0{hop.hop_index || idx + 1}
                           </span>
                           <span className="text-gray-400 font-mono text-[11px]">
-                            {formatTimestamp(hop.timestamp)} &bull; {hop.location || 'India'}
+                            {formatTimestamp(hop.timestamp)} {hop.location && `• ${hop.location}`}
                           </span>
                         </div>
 
-                        <div className="text-xs font-medium pt-1">
-                          <div className="flex items-center gap-2 flex-wrap">
+                        {/* Sender -> Receiver Flow */}
+                        <div className="text-xs font-medium pt-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-gray-200 font-bold">{hop.sender_name}</span>
                             <span className="text-gray-400 font-mono text-[11px]">({hop.sender_vpa})</span>
                             <ArrowRight className="w-3.5 h-3.5 text-[#E50914] flex-shrink-0" />
@@ -583,15 +592,16 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="border-t border-white/5 pt-2 flex items-center justify-between text-xs">
-                          <span className="text-[10px] font-mono text-gray-500 truncate max-w-xs">
-                            TXN: {hop.transaction_id}
+                        {/* Amount & Txn ID */}
+                        <div className="border-t border-white/5 pt-1.5 flex items-center justify-between text-xs">
+                          <span className="text-[10px] font-mono text-gray-500 truncate max-w-[240px]">
+                            ID: {hop.transaction_id}
                           </span>
-                          <div className="text-right">
-                            <span className="font-mono font-bold text-amber-300 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-amber-300 text-xs">
                               {formatCurrency(hop.amount)}
                             </span>
-                            <span className="ml-2 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                               {hop.status || 'SUCCESS'}
                             </span>
                           </div>
@@ -616,11 +626,11 @@ export default function App() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-white/10 bg-black/80 flex items-center justify-between text-xs font-mono text-gray-400">
-              <span className="truncate max-w-xs">ALERT ID: {selectedAlert.alert_id}</span>
+            <div className="p-3.5 sm:p-4 border-t border-white/10 bg-black/80 flex items-center justify-between text-xs font-mono text-gray-400 flex-shrink-0">
+              <span className="truncate max-w-xs text-[11px]">ALERT ID: {selectedAlert.alert_id}</span>
               <button 
                 onClick={closeModal}
-                className="px-4 py-1.5 rounded-lg bg-[#E50914] hover:bg-[#B80710] text-white font-bold transition-all shadow-[0_0_15px_rgba(229,9,20,0.5)] cursor-pointer"
+                className="px-4 py-1.5 rounded-lg bg-[#E50914] hover:bg-[#B80710] text-white font-bold transition-all shadow-[0_0_15px_rgba(229,9,20,0.5)] cursor-pointer text-xs"
               >
                 CLOSE PREVIEW
               </button>
@@ -631,7 +641,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-white/10 bg-black/90 py-4 px-6 text-center text-xs text-gray-500 font-mono">
-        MULE STREAM SURVEILLANCE &bull; CINEMATIC ENTERTAINMENT ARCHITECTURE &bull; APACHE FLINK 1.18 &bull; CLICKHOUSE OLAP
+        AegisStream &bull; Real-Time UPI &amp; Mule Account Stream Detector
       </footer>
     </div>
   );

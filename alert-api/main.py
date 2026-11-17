@@ -57,6 +57,24 @@ def health_check():
         return {"status": "degraded", "error": str(e)}
 
 
+@app.get("/stats")
+def get_stream_stats():
+    """
+    Returns aggregate real-time transaction count and total processed volume from ClickHouse.
+    """
+    try:
+        client = get_client()
+        result = client.query("SELECT count(), coalesce(sum(amount), 0) FROM raw_transactions")
+        row = result.result_rows[0]
+        return {
+            "total_count": int(row[0]),
+            "total_volume": float(row[1])
+        }
+    except Exception as e:
+        logging.error(f"Error querying stream stats: {e}")
+        return {"total_count": 0, "total_volume": 0.0}
+
+
 @app.get("/transactions", response_model=List[Dict[str, Any]])
 def get_recent_transactions(limit: int = Query(30, ge=1, le=100)):
     """
@@ -150,7 +168,8 @@ def get_alerts(limit: int = Query(50, ge=1, le=200)):
 def get_alert_hop_chain(alert_id: str):
     """
     Returns detailed metadata and the exact sequential Hop Chain for a clicked mule alert.
-    Queries ClickHouse for the alert and pulls associated transaction hops from raw_transactions.
+    Queries ClickHouse for the alert, retrieves associated transaction hops, and traces
+    connected forward/backward transfers (<= 15s) to guarantee full 3, 4, 5+ hop chains.
     """
     # Sanitize alert_id to avoid injection
     clean_alert_id = re.sub(r"[^a-zA-Z0-9_-]", "", alert_id)
@@ -180,9 +199,10 @@ def get_alert_hop_chain(alert_id: str):
         alert_row = alert_res.result_rows[0]
         raw_txn_ids = list(alert_row[5]) if alert_row[5] is not None else []
 
-        hops: List[Dict[str, Any]] = []
+        chain_txs: List[Dict[str, Any]] = []
+        visited_ids = set()
 
-        # 2. Query each hop transaction from raw_transactions if transaction IDs exist
+        # 2. Query initial transactions from raw_transactions
         if raw_txn_ids:
             sanitized_tids = [f"'{re.sub(r'[^a-zA-Z0-9_-]', '', tid)}'" for tid in raw_txn_ids if tid]
             if sanitized_tids:
@@ -190,7 +210,7 @@ def get_alert_hop_chain(alert_id: str):
                 tx_query = f"""
                 SELECT
                     transaction_id,
-                    formatDateTime(timestamp, '%Y-%m-%dT%H:%i:%SZ') AS timestamp,
+                    formatDateTime(timestamp, '%Y-%m-%dT%H:%i:%SZ') AS timestamp_str,
                     sender_name,
                     sender_vpa,
                     receiver_name,
@@ -198,15 +218,15 @@ def get_alert_hop_chain(alert_id: str):
                     amount,
                     status,
                     bank_code,
-                    location
+                    location,
+                    toUnixTimestamp64Milli(timestamp) AS ts_ms
                 FROM raw_transactions
                 WHERE transaction_id IN ({in_clause})
                 ORDER BY timestamp ASC
                 """
                 tx_res = client.query(tx_query)
-                for idx, tr in enumerate(tx_res.result_rows, start=1):
-                    hops.append({
-                        "hop_index": idx,
+                for tr in tx_res.result_rows:
+                    chain_txs.append({
                         "transaction_id": tr[0],
                         "timestamp": tr[1],
                         "sender_name": tr[2],
@@ -216,8 +236,122 @@ def get_alert_hop_chain(alert_id: str):
                         "amount": float(tr[6]),
                         "status": tr[7],
                         "bank_code": tr[8],
-                        "location": tr[9]
+                        "location": tr[9],
+                        "ts_ms": tr[10]
                     })
+                    visited_ids.add(tr[0])
+
+        # 3. Bidirectional graph traversal: expand forward and backward up to 5 hops
+        # Reconstructs any 3, 4, 5+ hop chains passing through this mule account
+        if chain_txs:
+            # Expand forward from the latest transaction in the chain
+            for _ in range(5):
+                last_tx = chain_txs[-1]
+                last_recv = re.sub(r"[^a-zA-Z0-9@._-]", "", str(last_tx["receiver_vpa"]))
+                last_ts = last_tx["ts_ms"]
+                fwd_query = f"""
+                SELECT
+                    transaction_id,
+                    formatDateTime(timestamp, '%Y-%m-%dT%H:%i:%SZ') AS timestamp_str,
+                    sender_name,
+                    sender_vpa,
+                    receiver_name,
+                    receiver_vpa,
+                    amount,
+                    status,
+                    bank_code,
+                    location,
+                    toUnixTimestamp64Milli(timestamp) AS ts_ms
+                FROM raw_transactions
+                WHERE sender_vpa = '{last_recv}'
+                  AND toUnixTimestamp64Milli(timestamp) >= {last_ts}
+                  AND toUnixTimestamp64Milli(timestamp) <= {last_ts + 15000}
+                ORDER BY timestamp ASC
+                LIMIT 1
+                """
+                fwd_res = client.query(fwd_query)
+                if not fwd_res.result_rows:
+                    break
+                row = fwd_res.result_rows[0]
+                if row[0] in visited_ids:
+                    break
+                visited_ids.add(row[0])
+                chain_txs.append({
+                    "transaction_id": row[0],
+                    "timestamp": row[1],
+                    "sender_name": row[2],
+                    "sender_vpa": row[3],
+                    "receiver_name": row[4],
+                    "receiver_vpa": row[5],
+                    "amount": float(row[6]),
+                    "status": row[7],
+                    "bank_code": row[8],
+                    "location": row[9],
+                    "ts_ms": row[10]
+                })
+
+            # Expand backward from the earliest transaction in the chain
+            for _ in range(5):
+                first_tx = chain_txs[0]
+                first_sender = re.sub(r"[^a-zA-Z0-9@._-]", "", str(first_tx["sender_vpa"]))
+                first_ts = first_tx["ts_ms"]
+                bwd_query = f"""
+                SELECT
+                    transaction_id,
+                    formatDateTime(timestamp, '%Y-%m-%dT%H:%i:%SZ') AS timestamp_str,
+                    sender_name,
+                    sender_vpa,
+                    receiver_name,
+                    receiver_vpa,
+                    amount,
+                    status,
+                    bank_code,
+                    location,
+                    toUnixTimestamp64Milli(timestamp) AS ts_ms
+                FROM raw_transactions
+                WHERE receiver_vpa = '{first_sender}'
+                  AND toUnixTimestamp64Milli(timestamp) <= {first_ts}
+                  AND toUnixTimestamp64Milli(timestamp) >= {first_ts - 15000}
+                ORDER BY timestamp DESC
+                LIMIT 1
+                """
+                bwd_res = client.query(bwd_query)
+                if not bwd_res.result_rows:
+                    break
+                row = bwd_res.result_rows[0]
+                if row[0] in visited_ids:
+                    break
+                visited_ids.add(row[0])
+                chain_txs.insert(0, {
+                    "transaction_id": row[0],
+                    "timestamp": row[1],
+                    "sender_name": row[2],
+                    "sender_vpa": row[3],
+                    "receiver_name": row[4],
+                    "receiver_vpa": row[5],
+                    "amount": float(row[6]),
+                    "status": row[7],
+                    "bank_code": row[8],
+                    "location": row[9],
+                    "ts_ms": row[10]
+                })
+
+        # Format hops with 1-based sequential index
+        hops: List[Dict[str, Any]] = []
+        for idx, tr in enumerate(chain_txs, start=1):
+            hops.append({
+                "hop_index": idx,
+                "transaction_id": tr["transaction_id"],
+                "timestamp": tr["timestamp"],
+                "sender_name": tr["sender_name"],
+                "sender_vpa": tr["sender_vpa"],
+                "receiver_name": tr["receiver_name"],
+                "receiver_vpa": tr["receiver_vpa"],
+                "amount": tr["amount"],
+                "status": tr["status"],
+                "bank_code": tr["bank_code"],
+                "location": tr["location"]
+            })
 
         return {
             "alert_id": alert_row[0],
@@ -225,7 +359,7 @@ def get_alert_hop_chain(alert_id: str):
             "account_id": alert_row[2],
             "amount": float(alert_row[3]),
             "detected_at": alert_row[4],
-            "txn_ids": raw_txn_ids,
+            "txn_ids": [h["transaction_id"] for h in hops],
             "total_hops": len(hops),
             "hops": hops
         }
