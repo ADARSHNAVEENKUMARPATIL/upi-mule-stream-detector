@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   ShieldAlert, 
@@ -7,50 +7,29 @@ import {
   AlertTriangle, 
   Search, 
   ArrowRight, 
-  TrendingDown,
-  CheckCircle,
-  X,
-  Clock,
-  User,
-  Radio,
-  Layers,
-  ChevronRight,
-  Sun,
-  Moon,
-  ExternalLink,
-  ShieldCheck,
-  Zap,
-  ArrowUpRight
+  TrendingDown, 
+  CheckCircle, 
+  X, 
+  Clock, 
+  Layers, 
+  ChevronRight, 
+  Play, 
+  Flame, 
+  Film, 
+  Tv, 
+  Sparkles, 
+  Eye, 
+  ShieldCheck, 
+  Radio 
 } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8000';
 
 export default function App() {
-  // Theme Management (Dark Mode default with localStorage persistence)
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved) return saved;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
-
-  // Full-Screen Initial Radar Loader (2 seconds)
+  // Cinematic 2-Second Initial Splash/Intro State
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Live Data States
+  // Live Stream Data States
   const [transactions, setTransactions] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [apiError, setApiError] = useState(null);
@@ -62,7 +41,7 @@ export default function App() {
   const [hopChainData, setHopChainData] = useState(null);
   const [loadingHopChain, setLoadingHopChain] = useState(false);
 
-  // 1. Initial 2-second radar splash animation
+  // 1. Initial 2-second cinematic intro timer
   useEffect(() => {
     const timer = setTimeout(() => {
       setInitialLoading(false);
@@ -70,7 +49,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 2. High-Frequency Poller (Pulls live raw transactions and fraud alerts every 1000ms)
+  // 2. High-Frequency Poller: Pulls live raw transactions and fraud alerts concurrently every 1000ms
   useEffect(() => {
     const fetchLiveData = async () => {
       try {
@@ -89,7 +68,7 @@ export default function App() {
         setLastSyncTime(new Date());
       } catch (err) {
         console.error("Polling error:", err);
-        setApiError("Unable to reach Alert API at http://localhost:8000");
+        setApiError("Unable to reach surveillance API at http://localhost:8000");
       }
     };
 
@@ -154,7 +133,7 @@ export default function App() {
   };
 
   const formatTimestamp = (ts) => {
-    if (!ts) return 'Just now';
+    if (!ts) return 'NOW';
     try {
       const d = new Date(ts);
       return d.toLocaleTimeString('en-US', { hour12: false }) + '.' + String(d.getMilliseconds()).padStart(3, '0');
@@ -163,208 +142,218 @@ export default function App() {
     }
   };
 
-  // ==========================================
-  // INITIAL FULL-SCREEN RADAR PULSE LOADER (2s)
-  // ==========================================
+  // ==============================================================
+  // INITIAL FULL-SCREEN CINEMATIC STREAMING INTRO (2 SECONDS)
+  // ==============================================================
   if (initialLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center relative overflow-hidden select-none">
-        {/* Ambient atmospheric glow */}
-        <div className="absolute w-[600px] h-[600px] bg-rose-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
-        <div className="absolute w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[90px] pointer-events-none"></div>
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center relative overflow-hidden select-none">
+        {/* Ambient Red & Purple Cinematic Backlight */}
+        <div className="absolute w-[700px] h-[700px] bg-[#E50914]/25 rounded-full blur-[140px] pointer-events-none animate-pulse"></div>
+        <div className="absolute w-[500px] h-[500px] bg-purple-900/20 rounded-full blur-[120px] pointer-events-none"></div>
 
-        {/* Radar concentric animation */}
-        <div className="relative flex items-center justify-center">
-          <div className="absolute w-80 h-80 border border-rose-500/15 rounded-full animate-ping duration-1000"></div>
-          <div className="absolute w-64 h-64 border border-rose-500/25 rounded-full animate-pulse"></div>
-          <div className="absolute w-44 h-44 border border-rose-500/35 rounded-full"></div>
+        {/* Cinematic Logo & Spotlight Container */}
+        <div className="relative z-10 flex flex-col items-center space-y-6 text-center px-4">
           
-          <div className="relative z-10 p-7 bg-slate-900/90 border border-slate-700/60 rounded-3xl shadow-2xl shadow-rose-950/60 backdrop-blur-xl flex flex-col items-center">
-            <div className="p-3 bg-rose-500/10 rounded-2xl border border-rose-500/30 mb-3">
-              <Radio className="w-10 h-10 text-rose-500 animate-spin" />
+          {/* Glowing Red Brand Mark */}
+          <div className="relative flex items-center justify-center">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#E50914] to-black p-0.5 shadow-[0_0_50px_rgba(229,9,20,0.8)] animate-pulse">
+              <div className="w-full h-full bg-[#111111] rounded-2xl flex items-center justify-center">
+                <span className="text-4xl font-black tracking-tighter text-[#E50914] cinema-text-glow font-sans">
+                  M
+                </span>
+              </div>
             </div>
-            <h2 className="text-sm font-semibold tracking-wider text-slate-200 uppercase font-mono flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-              Synchronizing Surveillance Stream
-            </h2>
-            <p className="text-xs text-slate-400 mt-1 font-mono">
-              Kafka KRaft &bull; Apache Flink 1.18 &bull; ClickHouse OLAP
+            {/* Pulsing ring */}
+            <div className="absolute -inset-3 rounded-3xl border border-[#E50914]/40 animate-ping duration-1000"></div>
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-white cinema-text-glow font-sans">
+              MULE <span className="text-[#E50914]">STREAM</span> SURVEILLANCE
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-400 font-mono tracking-wider">
+              INTERACTIVE STORYTELLING &bull; REAL-TIME UPI FRAUD ENGINE &bull; 2026+
             </p>
           </div>
-        </div>
 
-        <div className="mt-10 flex items-center gap-2 text-xs font-mono text-slate-500 tracking-wider">
-          <Zap className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
-          <span>INITIALIZING 5 TXNS/SEC STREAM PIPELINE</span>
+          {/* Audio/Spectrum Bars */}
+          <div className="flex items-center gap-1.5 h-6">
+            <span className="w-1 bg-[#E50914] h-3 animate-pulse"></span>
+            <span className="w-1 bg-[#E50914] h-6 animate-pulse delay-75"></span>
+            <span className="w-1 bg-[#E50914] h-4 animate-pulse delay-150"></span>
+            <span className="w-1 bg-[#E50914] h-5 animate-pulse delay-100"></span>
+            <span className="w-1 bg-[#E50914] h-2 animate-pulse"></span>
+          </div>
+
+          <div className="text-[11px] font-mono text-gray-500 uppercase tracking-widest pt-2">
+            INITIALIZING KAFKA STREAM &bull; APACHE FLINK 1.18 &bull; CLICKHOUSE OLAP
+          </div>
         </div>
       </div>
     );
   }
 
-  // ==========================================
-  // MAIN ENTERPRISE DASHBOARD
-  // ==========================================
+  // ==============================================================
+  // MAIN CINEMATIC STREAMING DASHBOARD (NETFLIX / APPLE TV STYLE)
+  // ==============================================================
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 flex flex-col font-sans">
+    <div className="min-h-screen bg-black text-white cinema-backdrop flex flex-col font-sans selection:bg-[#E50914] selection:text-white">
       
-      {/* Top Navbar */}
-      <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/70 backdrop-blur-md sticky top-0 z-30 px-6 py-3.5 shadow-sm">
-        <div className="max-w-[1700px] mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Top Navigation Bar: Clean Streaming Chrome */}
+      <header className="sticky top-0 z-40 bg-black/85 backdrop-blur-xl border-b border-white/10 px-6 py-4 shadow-2xl transition-all">
+        <div className="max-w-[1750px] mx-auto flex items-center justify-between gap-4">
           
-          {/* Logo & Subtitle */}
-          <div className="flex items-center space-x-3.5">
-            <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 dark:border-rose-500/30 rounded-xl shadow-sm">
-              <ShieldAlert className="w-6 h-6 text-rose-600 dark:text-rose-500 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                  UPI Mule Account Stream Detector
-                </h1>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-medium">
-                  5 txns/sec
-                </span>
+          {/* Brand Identity */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2.5 cursor-pointer">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-[#E50914] to-red-600 flex items-center justify-center shadow-[0_0_15px_rgba(229,9,20,0.7)]">
+                <span className="text-xl font-black text-white tracking-tighter">M</span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
-                Sub-second pass-through & velocity detection with dynamic hop chain reconstruction
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-lg font-black tracking-tight uppercase text-white cinema-text-glow">
+                    MULE<span className="text-[#E50914]">FLIX</span> // SENTINEL
+                  </h1>
+                  <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-[#E50914]/20 text-[#E50914] border border-[#E50914]/40 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#E50914] animate-ping"></span>
+                    LIVE STREAM
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400 font-mono hidden sm:block">
+                  Sub-15s pass-through detection powered by Apache Flink 1.18 & ClickHouse
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Right Header Controls (Poller status & Theme Toggle) */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center space-x-2 text-xs bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+          {/* Right Status Badges */}
+          <div className="flex items-center space-x-3 text-xs font-mono">
+            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-[#181818] border border-white/10 shadow-inner">
               <span className={`w-2 h-2 rounded-full ${apiError ? 'bg-amber-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`}></span>
-              <span className="font-mono text-slate-700 dark:text-slate-300">
-                {apiError ? 'API Reconnecting' : 'Stream Live'}
+              <span className="text-gray-300 font-bold">
+                {apiError ? 'RECONNECTING...' : 'SURVEILLANCE ONLINE'}
               </span>
             </div>
 
             {lastSyncTime && (
-              <span className="text-xs text-slate-400 font-mono hidden md:inline">
+              <span className="text-xs text-gray-400 font-mono hidden md:inline">
                 {lastSyncTime.toLocaleTimeString()}
               </span>
             )}
-
-            {/* Theme Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-rose-500/40"
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-400" />
-              ) : (
-                <Moon className="w-4 h-4 text-indigo-600" />
-              )}
-            </button>
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-[1700px] w-full mx-auto p-4 sm:p-6 space-y-5">
+      {/* Main Streaming Feed Area */}
+      <main className="flex-1 max-w-[1750px] w-full mx-auto p-4 sm:p-6 space-y-6">
         
         {apiError && (
-          <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-between text-amber-800 dark:text-amber-300 text-sm shadow-sm">
-            <div className="flex items-center gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-              <span>{apiError}</span>
+          <div className="p-4 rounded-xl bg-gradient-to-r from-red-950/80 to-black border border-[#E50914]/60 text-red-200 text-sm flex items-center justify-between shadow-[0_0_20px_rgba(229,9,20,0.3)]">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-[#E50914] flex-shrink-0 animate-pulse" />
+              <span className="font-medium">{apiError}</span>
             </div>
-            <span className="text-xs font-mono opacity-80">Retrying live stream...</span>
+            <span className="text-xs font-mono opacity-80">Retrying connection every 1000ms...</span>
           </div>
         )}
 
-        {/* KPI Telemetry Header Grid */}
+        {/* 4 Cinematic KPI Highlight Cards (Movie Billboard Style) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
-          <div className="bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+          {/* Card 1: Live Transactions Buffer */}
+          <div className="cinema-glass rounded-xl p-4 relative overflow-hidden group hover:border-[#E50914]/50 transition-all duration-300 shadow-cinema-card">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#E50914] to-transparent opacity-60"></div>
             <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-semibold tracking-wider text-slate-500 dark:text-slate-400">Stream Buffer</span>
-              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Stream Activity</span>
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
                 <Activity className="w-4 h-4" />
               </div>
             </div>
-            <div className="mt-2 text-2xl font-bold font-mono text-slate-900 dark:text-white">
+            <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">
               {transactions.length > 0 ? `${transactions.length} txns` : 'Streaming...'}
             </div>
-            <div className="mt-1 text-xs text-slate-400 dark:text-slate-500">Live ClickHouse raw ingestion</div>
+            <div className="mt-1 text-xs text-gray-400">Ingested into raw_transactions</div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900/80 border border-rose-200 dark:border-rose-950/70 rounded-2xl p-4 shadow-sm relative overflow-hidden hover:shadow-md transition-shadow">
-            <div className="absolute -right-4 -bottom-4 w-16 h-16 bg-rose-500/10 rounded-full blur-xl pointer-events-none"></div>
+          {/* Card 2: Flagged Mule Accounts */}
+          <div className="cinema-glass rounded-xl p-4 relative overflow-hidden group border border-[#E50914]/30 hover:border-[#E50914] transition-all duration-300 shadow-cinema-glow">
+            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-[#E50914]/20 rounded-full blur-2xl pointer-events-none"></div>
             <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-semibold tracking-wider text-rose-600 dark:text-rose-400">Flagged Mules</span>
-              <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#E50914]">Flagged Mules</span>
+              <div className="p-2 rounded-lg bg-[#E50914]/20 text-[#E50914]">
                 <ShieldAlert className="w-4 h-4" />
               </div>
             </div>
-            <div className="mt-2 text-2xl font-bold font-mono text-rose-600 dark:text-rose-400">
+            <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-[#E50914] font-mono tracking-tight cinema-text-glow">
               {uniqueMuleAccounts}
             </div>
-            <div className="mt-1 text-xs text-rose-500/70">Unique compromised VPAs</div>
+            <div className="mt-1 text-xs text-red-300/80">Compromised 10-digit VPAs</div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+          {/* Card 3: Flagged Laundering Volume */}
+          <div className="cinema-glass rounded-xl p-4 relative overflow-hidden group hover:border-amber-500/50 transition-all duration-300 shadow-cinema-card">
             <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-semibold tracking-wider text-slate-500 dark:text-slate-400">Flagged Volume</span>
-              <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Laundered Volume</span>
+              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
                 <TrendingDown className="w-4 h-4" />
               </div>
             </div>
-            <div className="mt-2 text-2xl font-bold font-mono text-slate-900 dark:text-white">
+            <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-amber-300 font-mono tracking-tight cinema-gold-glow">
               {formatCurrency(totalFlaggedVolume)}
             </div>
-            <div className="mt-1 text-xs text-slate-400 dark:text-slate-500">Total pass-through volume</div>
+            <div className="mt-1 text-xs text-gray-400">Pass-through money volume</div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+          {/* Card 4: Sub-15s Rule */}
+          <div className="cinema-glass rounded-xl p-4 relative overflow-hidden group hover:border-purple-500/50 transition-all duration-300 shadow-cinema-card">
             <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-semibold tracking-wider text-slate-500 dark:text-slate-400">Pass-Through Rule</span>
-              <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Velocity Cutoff</span>
+              <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
                 <CheckCircle className="w-4 h-4" />
               </div>
             </div>
-            <div className="mt-2 text-2xl font-bold font-mono text-indigo-600 dark:text-indigo-400">
+            <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-purple-300 font-mono tracking-tight">
               &le; 15.0s
             </div>
-            <div className="mt-1 text-xs text-slate-400 dark:text-slate-500">Inflow-to-outflow hop threshold</div>
+            <div className="mt-1 text-xs text-gray-400">Inflow &rarr; outflow detection gate</div>
           </div>
         </div>
 
         {/* ======================================================== */}
-        {/* SPLIT SCREEN: LEFT 70% STREAM | RIGHT 30% ALERTS        */}
+        {/* CINEMATIC SPLIT SCREEN (70% LEFT FEED | 30% RIGHT ALERTS)*/}
         {/* ======================================================== */}
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-5 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
           
           {/* ======================================================== */}
-          {/* LEFT PANEL (70% WIDTH = COL-SPAN-7): LIVE STREAM TABLE   */}
+          {/* LEFT PANEL: 70% WIDTH (COL-SPAN-7) LIVE STREAM TIMELINE   */}
           {/* ======================================================== */}
-          <div className="lg:col-span-7 bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[700px]">
+          <div className="lg:col-span-7 cinema-glass rounded-xl border border-white/10 shadow-cinema-card flex flex-col h-[740px] overflow-hidden">
             
-            {/* Header */}
-            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 flex items-center justify-between">
+            {/* Panel Header */}
+            <div className="px-5 py-4 border-b border-white/10 bg-gradient-to-r from-[#171717] to-black flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Live Transaction Stream
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
+                <h2 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                  <Film className="w-4 h-4 text-[#E50914]" />
+                  Live Transaction Broadcast
                 </h2>
               </div>
-              <span className="text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-3 py-1 rounded-full">
-                Speed: 5 txns/sec
+              <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-[#E50914]/15 text-[#E50914] border border-[#E50914]/30 shadow-[0_0_12px_rgba(229,9,20,0.3)]">
+                5 TXNS/SEC
               </span>
             </div>
 
             {/* Sub-header info bar */}
-            <div className="px-5 py-2.5 bg-slate-100/60 dark:bg-slate-900/30 border-b border-slate-200 dark:border-slate-800/80 text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center justify-between">
-              <span>TABLE: raw_transactions (ClickHouse)</span>
-              <span>AUTO-SCROLLING FEED</span>
+            <div className="px-5 py-2.5 bg-[#0d0d0d] border-b border-white/5 text-[11px] font-mono text-gray-400 flex items-center justify-between">
+              <span>STREAM SOURCE: DEFAULT.RAW_TRANSACTIONS</span>
+              <span>CONTINUOUS AUDIT LOG</span>
             </div>
 
-            {/* Scrollable Live Table */}
+            {/* Scrolling Transaction Rows */}
             <div className="flex-1 overflow-y-auto">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-slate-100/80 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px] font-semibold sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
+                <thead className="bg-[#121212]/90 text-gray-400 uppercase text-[11px] font-semibold sticky top-0 z-10 border-b border-white/10 backdrop-blur-md">
                   <tr>
                     <th className="py-3 px-4">Timestamp</th>
                     <th className="py-3 px-4">Sender</th>
@@ -373,46 +362,46 @@ export default function App() {
                     <th className="py-3 px-4 text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-white/5 font-mono">
                   {transactions.length > 0 ? (
                     transactions.map((tx) => (
                       <tr 
                         key={tx.transaction_id}
-                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-100 group"
+                        className="hover:bg-gradient-to-r hover:from-white/5 hover:to-[#E50914]/10 transition-colors duration-150 group cursor-default"
                       >
                         {/* Timestamp */}
-                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        <td className="py-3 px-4 text-gray-400 whitespace-nowrap text-[11px]">
                           {formatTimestamp(tx.timestamp)}
                         </td>
 
                         {/* Sender */}
-                        <td className="py-3 px-4 max-w-[200px]">
-                          <div className="font-sans font-medium text-slate-900 dark:text-slate-200 truncate">
+                        <td className="py-3 px-4 max-w-[210px]">
+                          <div className="font-sans font-bold text-gray-200 truncate group-hover:text-white">
                             {tx.sender_name}
                           </div>
-                          <div className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+                          <div className="text-[11px] text-gray-400 truncate">
                             {tx.sender_vpa}
                           </div>
                         </td>
 
                         {/* Receiver */}
-                        <td className="py-3 px-4 max-w-[200px]">
-                          <div className="font-sans font-medium text-slate-900 dark:text-slate-200 truncate">
+                        <td className="py-3 px-4 max-w-[210px]">
+                          <div className="font-sans font-bold text-gray-200 truncate group-hover:text-white">
                             {tx.receiver_name}
                           </div>
-                          <div className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+                          <div className="text-[11px] text-gray-400 truncate">
                             {tx.receiver_vpa}
                           </div>
                         </td>
 
                         {/* Amount */}
-                        <td className="py-3 px-4 text-right whitespace-nowrap font-bold text-slate-900 dark:text-slate-100">
+                        <td className="py-3 px-4 text-right whitespace-nowrap font-bold text-white">
                           {formatCurrency(tx.amount)}
                         </td>
 
                         {/* Status */}
                         <td className="py-3 px-4 text-center whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                             SUCCESS
                           </span>
@@ -421,10 +410,10 @@ export default function App() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-24 text-center text-slate-400 dark:text-slate-500">
-                        <div className="flex flex-col items-center justify-center space-y-2">
-                          <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
-                          <p className="font-sans text-xs">Waiting for incoming transaction stream...</p>
+                      <td colSpan={5} className="py-32 text-center text-gray-500">
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                          <RefreshCw className="w-8 h-8 animate-spin text-[#E50914]" />
+                          <p className="font-mono text-xs text-gray-400">CONNECTING TO HIGH-SPEED KAFKA INGESTION STREAM...</p>
                         </div>
                       </td>
                     </tr>
@@ -435,77 +424,80 @@ export default function App() {
           </div>
 
           {/* ======================================================== */}
-          {/* RIGHT PANEL (30% WIDTH = COL-SPAN-3): FRAUD ALERTS       */}
+          {/* RIGHT PANEL: 30% WIDTH (COL-SPAN-3) MULE WATCHLIST CARDS */}
           {/* ======================================================== */}
-          <div className="lg:col-span-3 bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[700px]">
+          <div className="lg:col-span-3 cinema-glass rounded-xl border border-white/10 shadow-cinema-card flex flex-col h-[740px] overflow-hidden">
             
             {/* Header */}
-            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-white/10 bg-gradient-to-r from-[#171717] to-black flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-500 animate-pulse" />
-                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Fraud Alerts
+                <Flame className="w-4 h-4 text-[#E50914] animate-bounce" />
+                <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+                  Mule Incidents Watchlist
                 </h2>
               </div>
-              <span className="text-xs font-mono font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 px-2.5 py-0.5 rounded-full">
-                {filteredAlerts.length} Flagged
+              <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#E50914] text-white shadow-[0_0_12px_rgba(229,9,20,0.5)]">
+                {filteredAlerts.length} FLAGGED
               </span>
             </div>
 
             {/* Search Box */}
-            <div className="p-3 bg-slate-50 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800">
+            <div className="p-3 bg-[#0d0d0d] border-b border-white/10">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input 
                   type="text" 
-                  placeholder="Filter by 10-digit VPA..."
+                  placeholder="Filter by 10-digit VPA or Txn ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500 font-mono shadow-sm"
+                  className="w-full bg-[#181818] border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-500 font-mono focus:outline-none focus:border-[#E50914] focus:ring-1 focus:ring-[#E50914]"
                 />
               </div>
             </div>
 
-            {/* Alerts Feed */}
+            {/* Interactive Alerts Feed */}
             <div className="flex-1 overflow-y-auto p-3 space-y-3">
               {filteredAlerts.length > 0 ? (
                 filteredAlerts.map((alert) => (
                   <div
                     key={alert.alert_id}
                     onClick={() => handleAlertClick(alert)}
-                    className="group bg-slate-50/70 dark:bg-slate-950/60 hover:bg-rose-50/60 dark:hover:bg-rose-950/20 border border-slate-200/80 dark:border-slate-800/80 hover:border-rose-400 dark:hover:border-rose-500/50 p-4 rounded-xl cursor-pointer transition-all duration-150 shadow-sm relative"
+                    className="cinema-glass rounded-xl p-3.5 border border-white/10 hover:border-[#E50914] cursor-pointer dynamic-cover-hover group relative overflow-hidden"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                    {/* Glowing side accent line */}
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#E50914] group-hover:w-1.5 transition-all"></div>
+
+                    <div className="flex items-center justify-between pl-1 text-[11px] font-mono">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#E50914]/20 text-[#E50914] border border-[#E50914]/40 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#E50914] animate-ping"></span>
                         MULE DETECTED
                       </span>
-                      <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
+                      <span className="text-gray-400">
                         {formatTimestamp(alert.detected_at)}
                       </span>
                     </div>
 
-                    <div className="mt-2.5 font-mono font-bold text-sm text-slate-900 dark:text-rose-300 truncate">
+                    <div className="mt-2.5 pl-1 font-mono font-bold text-sm text-red-200 group-hover:text-white transition-colors truncate">
                       {alert.account_id}
                     </div>
 
-                    <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs">
-                      <span className="font-mono font-bold text-slate-900 dark:text-white">
+                    <div className="mt-2 pl-1 pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                      <span className="font-mono font-bold text-amber-300">
                         {formatCurrency(alert.amount)}
                       </span>
-                      <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 group-hover:underline">
+                      <div className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E50914] group-hover:text-red-400 group-hover:translate-x-0.5 transition-all">
                         <span>Hop Chain</span>
-                        <ChevronRight className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" />
+                        <ChevronRight className="w-3.5 h-3.5" />
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-6 text-center space-y-2">
-                  <ShieldCheck className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-                  <p className="text-xs font-mono">No fraud alerts detected yet</p>
-                  <p className="text-[11px] text-slate-400">
-                    Synthetic 3-hop chains are injected periodically to test pass-through detection.
+                <div className="h-full flex flex-col items-center justify-center text-gray-500 p-6 text-center space-y-2">
+                  <ShieldCheck className="w-10 h-10 text-gray-600" />
+                  <p className="font-mono text-xs text-gray-400 font-bold uppercase">NO FRAUD ALERTS DETECTED</p>
+                  <p className="text-[11px] text-gray-500">
+                    Synthetic 3-hop laundering chains are automatically injected every 75 transactions to verify detection.
                   </p>
                 </div>
               )}
@@ -515,118 +507,122 @@ export default function App() {
       </main>
 
       {/* ======================================================== */}
-      {/* GLASSMORPHISM HOP CHAIN MODAL (POPUP ON CLICKING ALERT) */}
+      {/* CINEMATIC PREMIERE HOP CHAIN MODAL (POPUP ON ALERT CLICK) */}
       {/* ======================================================== */}
       {selectedAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
+          <div className="cinema-glass-elevated rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-[0_0_60px_rgba(229,9,20,0.4)]">
             
             {/* Modal Header */}
-            <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 flex items-center justify-between">
+            <div className="p-5 border-b border-white/10 bg-gradient-to-r from-red-950/60 via-[#181818] to-black flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl">
-                  <Layers className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                <div className="p-2.5 rounded-xl bg-[#E50914]/20 border border-[#E50914]/40 text-[#E50914]">
+                  <Layers className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    Laundering Hop Chain Analysis
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-500/30 font-semibold">
-                      SUSPICIOUS PASS-THROUGH
+                  <h3 className="text-base font-extrabold uppercase text-white cinema-text-glow flex items-center gap-2">
+                    Laundering Hop-Chain Inspection
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#E50914] text-white">
+                      FLAGGED
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-                    Flagged VPA: <span className="text-rose-600 dark:text-rose-400 font-bold">{selectedAlert.account_id}</span>
+                  <p className="text-xs font-mono text-gray-400 mt-0.5">
+                    Account: <span className="text-red-300 font-bold">{selectedAlert.account_id}</span>
                   </p>
                 </div>
               </div>
 
               <button 
                 onClick={closeModal}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white transition-colors"
+                title="Close Modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Body: Sequential Hop Visualization */}
+            {/* Modal Body: Sequential Hop Breakdown */}
             <div className="p-6 overflow-y-auto space-y-4">
               {loadingHopChain ? (
-                <div className="py-16 flex flex-col items-center justify-center space-y-3">
-                  <RefreshCw className="w-8 h-8 animate-spin text-rose-500" />
-                  <p className="text-xs font-mono text-slate-500 dark:text-slate-400">Reconstructing hop chain from ClickHouse...</p>
+                <div className="py-20 flex flex-col items-center justify-center space-y-3">
+                  <RefreshCw className="w-8 h-8 animate-spin text-[#E50914]" />
+                  <p className="text-xs font-mono text-gray-400 uppercase">RECONSTRUCTING SEQUENTIAL HOPS FROM CLICKHOUSE...</p>
                 </div>
               ) : hopChainData && hopChainData.hops && hopChainData.hops.length > 0 ? (
                 <div className="space-y-4">
-                  <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mb-2">
-                    Reconstructed {hopChainData.hops.length} sequential transaction hops passing through this account:
+                  <div className="text-xs font-mono text-gray-400 uppercase border-b border-white/10 pb-2">
+                    RECONSTRUCTED {hopChainData.hops.length} SEQUENTIAL HOPS CROSSING THIS MULE ACCOUNT:
                   </div>
 
                   {hopChainData.hops.map((hop, idx) => (
                     <div key={hop.transaction_id || idx} className="relative">
-                      {/* Connecting vertical gradient line between hops */}
+                      {/* Vertical connecting gradient indicator */}
                       {idx < hopChainData.hops.length - 1 && (
-                        <div className="absolute left-6 top-12 bottom-0 w-0.5 bg-gradient-to-b from-rose-500/60 to-rose-500/20 -mb-4 z-0"></div>
+                        <div className="my-2 flex justify-center text-[11px] font-mono font-bold text-[#E50914]">
+                          &darr; [PASS-THROUGH VELOCITY: &le; 3.0 SECONDS] &darr;
+                        </div>
                       )}
 
-                      <div className="relative z-10 bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-                        
-                        <div className="flex items-center gap-3.5">
-                          <div className="w-8 h-8 rounded-full bg-rose-500/10 dark:bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-xs font-mono font-bold text-rose-600 dark:text-rose-400 flex-shrink-0">
-                            H{hop.hop_index || idx + 1}
-                          </div>
-                          <div>
-                            <div className="text-xs font-mono text-slate-400">
-                              {formatTimestamp(hop.timestamp)} &bull; {hop.location || 'India'}
-                            </div>
-                            <div className="text-sm font-semibold text-slate-900 dark:text-slate-200 mt-0.5 flex items-center gap-2 flex-wrap">
-                              <span>{hop.sender_name}</span>
-                              <span className="text-xs font-mono text-slate-400">({hop.sender_vpa})</span>
-                              <ArrowRight className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
-                              <span className="text-rose-600 dark:text-rose-300">{hop.receiver_name}</span>
-                              <span className="text-xs font-mono text-rose-500/80">({hop.receiver_vpa})</span>
-                            </div>
-                            <div className="text-[11px] font-mono text-slate-400 mt-1 truncate max-w-sm">
-                              Txn: {hop.transaction_id}
-                            </div>
+                      <div className="cinema-glass rounded-xl p-4 border border-white/10 hover:border-[#E50914]/50 transition-all space-y-2">
+                        <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs">
+                          <span className="font-mono font-bold px-2 py-0.5 rounded bg-[#E50914]/20 text-[#E50914] border border-[#E50914]/30">
+                            SCENE // HOP 0{hop.hop_index || idx + 1}
+                          </span>
+                          <span className="text-gray-400 font-mono text-[11px]">
+                            {formatTimestamp(hop.timestamp)} &bull; {hop.location || 'India'}
+                          </span>
+                        </div>
+
+                        <div className="text-xs font-medium pt-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-gray-200 font-bold">{hop.sender_name}</span>
+                            <span className="text-gray-400 font-mono text-[11px]">({hop.sender_vpa})</span>
+                            <ArrowRight className="w-3.5 h-3.5 text-[#E50914] flex-shrink-0" />
+                            <span className="text-red-300 font-bold">{hop.receiver_name}</span>
+                            <span className="text-red-400/80 font-mono text-[11px]">({hop.receiver_vpa})</span>
                           </div>
                         </div>
 
-                        <div className="text-right flex-shrink-0 pl-11 sm:pl-0">
-                          <div className="text-sm font-bold font-mono text-slate-900 dark:text-white">
-                            {formatCurrency(hop.amount)}
-                          </div>
-                          <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                            {hop.status || 'SUCCESS'}
+                        <div className="border-t border-white/5 pt-2 flex items-center justify-between text-xs">
+                          <span className="text-[10px] font-mono text-gray-500 truncate max-w-xs">
+                            TXN: {hop.transaction_id}
                           </span>
+                          <div className="text-right">
+                            <span className="font-mono font-bold text-amber-300 text-sm">
+                              {formatCurrency(hop.amount)}
+                            </span>
+                            <span className="ml-2 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                              {hop.status || 'SUCCESS'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                /* Fallback simple summary card */
-                <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center space-y-3">
-                  <ShieldAlert className="w-8 h-8 text-rose-500 mx-auto" />
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Rapid Pass-Through Velocity Detected</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                    Account <span className="font-mono text-rose-600 dark:text-rose-400">{selectedAlert.account_id}</span> received 
-                    funds and immediately forwarded them within the 15-second window.
+                <div className="cinema-glass rounded-xl p-6 text-center space-y-3 border border-white/10">
+                  <ShieldAlert className="w-10 h-10 text-[#E50914] mx-auto animate-pulse" />
+                  <h4 className="text-sm font-bold uppercase text-white">RAPID PASS-THROUGH VELOCITY DETECTED</h4>
+                  <p className="text-xs text-gray-400 max-w-md mx-auto">
+                    Account <span className="font-mono text-[#E50914] font-bold">{selectedAlert.account_id}</span> forwarded 
+                    received funds within the sub-15-second keyed window.
                   </p>
-                  <div className="inline-block px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-semibold text-slate-700 dark:text-slate-300">
-                    Flagged Amount: {formatCurrency(selectedAlert.amount)}
+                  <div className="inline-block p-2 rounded-lg bg-black border border-[#E50914]/40 text-xs font-mono font-bold text-amber-300">
+                    FLAGGED AMOUNT: {formatCurrency(selectedAlert.amount)}
                   </div>
                 </div>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 flex items-center justify-between text-xs text-slate-500 font-mono">
-              <span className="truncate max-w-xs">Alert ID: {selectedAlert.alert_id}</span>
+            <div className="p-4 border-t border-white/10 bg-black/80 flex items-center justify-between text-xs font-mono text-gray-400">
+              <span className="truncate max-w-xs">ALERT ID: {selectedAlert.alert_id}</span>
               <button 
                 onClick={closeModal}
-                className="px-4 py-1.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-medium transition-colors"
+                className="px-4 py-1.5 rounded-lg bg-[#E50914] hover:bg-[#B80710] text-white font-bold transition-all shadow-[0_0_15px_rgba(229,9,20,0.5)] cursor-pointer"
               >
-                Close Inspector
+                CLOSE PREVIEW
               </button>
             </div>
           </div>
@@ -634,8 +630,8 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-950 py-3 px-6 text-center text-xs text-slate-400 dark:text-slate-600 font-mono">
-        Real-Time UPI Mule Stream Detector &bull; ClickHouse OLAP &bull; Apache Flink 1.18 &bull; React + Tailwind
+      <footer className="border-t border-white/10 bg-black/90 py-4 px-6 text-center text-xs text-gray-500 font-mono">
+        MULE STREAM SURVEILLANCE &bull; CINEMATIC ENTERTAINMENT ARCHITECTURE &bull; APACHE FLINK 1.18 &bull; CLICKHOUSE OLAP
       </footer>
     </div>
   );
