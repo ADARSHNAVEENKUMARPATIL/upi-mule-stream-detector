@@ -17,7 +17,7 @@ import {
   Flame 
 } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = '';
 
 export default function App() {
   // Cinematic 2-Second Initial Splash/Intro State
@@ -92,7 +92,7 @@ export default function App() {
         setLastSyncTime(new Date());
       } catch (err) {
         console.error("Polling error:", err);
-        setApiError("Unable to reach surveillance API at http://localhost:8000");
+        setApiError("Unable to reach surveillance API");
       }
     };
 

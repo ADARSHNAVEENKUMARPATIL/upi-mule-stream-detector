@@ -71,14 +71,13 @@ The script will automatically:
 
 ## Service Endpoints
 
-| Service | URL | Notes |
-| :--- | :--- | :--- |
-| **React Dashboard** | [http://localhost:5173](http://localhost:5173) | Main visual monitoring dashboard |
-| **FastAPI Backend** | [http://localhost:8000/docs](http://localhost:8000/docs) | Swagger API documentation |
-| **Alerts Endpoint** | [http://localhost:8000/alerts](http://localhost:8000/alerts) | JSON feed of detected mule alerts |
-| **Live Transactions** | [http://localhost:8000/transactions](http://localhost:8000/transactions) | Feed of raw incoming transactions |
-| **Flink Dashboard** | [http://localhost:8081](http://localhost:8081) | Flink JobManager web console |
-| **ClickHouse HTTP** | [http://localhost:8123](http://localhost:8123) | ClickHouse database query interface |
+| Service | Host Port | URL / Access | Description |
+| :--- | :--- | :--- | :--- |
+| **React Dashboard** | `5173` | [http://localhost:5173](http://localhost:5173) | **Sole exposed entrypoint**; proxies API calls internally |
+| **FastAPI Backend** | Internal (8000) | `http://localhost:5173/transactions`, `/alerts`, `/stats` | Proxied through frontend on 5173 |
+| **Flink Dashboard** | Internal (8081) | Internal container network (`jobmanager:8081`) | External host port closed for security |
+| **ClickHouse HTTP** | Internal (8123) | Internal container network (`clickhouse:8123`) | External host port closed for security |
+| **Kafka Broker** | Internal (9092) | Internal container network (`kafka:9092`) | External host port closed for security |
 
 ---
 
