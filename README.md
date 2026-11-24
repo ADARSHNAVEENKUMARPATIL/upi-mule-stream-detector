@@ -86,7 +86,7 @@ The script will automatically:
 ```
 ├── docker-compose.yml          # 7-container Docker orchestration
 ├── start.ps1                   # One-click automated launch script
-├── push.md                     # GitHub push guide
+├── explain.txt                 # Complete project & code explanation guide
 ├── .gitignore                  # Git exclusions for node_modules, target, etc.
 │
 ├── producer/                   # Python transaction ingestion simulator
